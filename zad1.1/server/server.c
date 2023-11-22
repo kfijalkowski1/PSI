@@ -48,9 +48,7 @@ int main(int argc, char *argv[]) {
 
    for (;;) {
          long int counter = 0;
-        char host[NI_MAXHOST], service[NI_MAXSERV], response[3] = "OK";
-        double stimestamp, rtimestamp;
-        struct timeval tv;
+        char host[NI_MAXHOST], service[NI_MAXSERV], response[5];
 
         peer_addrlen = sizeof(peer_addr);
         nread = recvfrom(sfd, buf, BUF_SIZE - 1, 0,
@@ -71,15 +69,19 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "getnameinfo() error: %s\n", gai_strerror(s));
             continue;
         }
-         sscanf( buf, "%ld %lf", &counter,  &stimestamp );
-         gettimeofday(&tv, NULL);
-         rtimestamp = timeinms(tv);	// printf("r=%lf s=%lf ", rtimestamp, stimestamp);
-         printf("Received counter = %ld time_delta = %10.2lf\n", counter, rtimestamp - stimestamp );
-
         // Print the entire string received
         printf("Received string: '%s'\n", buf+6);
-
-	if (sendto(sfd, response, strlen(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen) < 0) {
+        uint32_t myInt1 = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
+        uint32_t myInt2 = buf[4] + (buf[5] << 8);
+        printf("%ld %ld \n", myInt1, myInt2);
+        response[0]=buf[0];
+        response[1]=buf[1];
+        response[2]=buf[2];
+        response[3]=buf[3];
+        response[4]=0;
+        // 0 - udalo
+        // 1 - nie udalo sie
+	if (sendto(sfd, response, sizeof(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen) < 0) {
 		printf("Failed to write response\n");
 	}
     }
