@@ -46,20 +46,20 @@ int main(int argc, char *argv[]) {
     /* Read datagrams and echo them back to sender. */
    printf("waiting for packets...\n");
 
-    for (;;) {
-	long int counter = 0;
-	char host[NI_MAXHOST], service[NI_MAXSERV];
-	double stimestamp, rtimestamp;
-	struct timeval tv;
+   for (;;) {
+         long int counter = 0;
+        char host[NI_MAXHOST], service[NI_MAXSERV];
+        double stimestamp, rtimestamp;
+        struct timeval tv;
 
         peer_addrlen = sizeof(peer_addr);
-        nread = recvfrom(sfd, buf, BUF_SIZE, 0,
+        nread = recvfrom(sfd, buf, BUF_SIZE - 1, 0,
                          (struct sockaddr *) &peer_addr, &peer_addrlen);
-	printf("recvfrom ok\n");
-        if (nread <0 ) {
-	    fprintf(stderr, "failed recvfrom\n");
-            continue;               /* Ignore failed request */
-	}
+        printf("recvfrom ok\n");
+        if (nread < 0) {
+            fprintf(stderr, "failed recvfrom\n");
+            continue;  // Ignore failed request
+        }
 
         s = getnameinfo((struct sockaddr *) &peer_addr, peer_addrlen, host, NI_MAXHOST,
                         service, NI_MAXSERV, NI_NUMERICSERV);
@@ -67,13 +67,15 @@ int main(int argc, char *argv[]) {
             printf("Received %zd bytes from %s:%s\n", nread, host, service);
         else {
             fprintf(stderr, "getnameinfo() error: %s\n", gai_strerror(s));
-	    continue;
+            continue;
         }
-	sscanf( buf, "%ld %lf", &counter,  &stimestamp );
-	gettimeofday(&tv, NULL);
-	rtimestamp = timeinms(tv);
-	// printf("r=%lf s=%lf ", rtimestamp, stimestamp);
-	printf("Received counter = %ld time_delta = %10.2lf\n", counter, rtimestamp - stimestamp );
-     }
+         sscanf( buf, "%ld %lf", &counter,  &stimestamp );
+         gettimeofday(&tv, NULL);
+         rtimestamp = timeinms(tv);	// printf("r=%lf s=%lf ", rtimestamp, stimestamp);
+         printf("Received counter = %ld time_delta = %10.2lf\n", counter, rtimestamp - stimestamp );
+
+        // Print the entire string received
+        printf("Received string: '%s'\n", buf);
+    }
 }
 
