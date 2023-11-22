@@ -5,7 +5,7 @@ import socket
 import sys
 import io
 
-HOST = '127.0.0.1'  # The server's hostname or IP address
+HOST = 'z26_z11_server'  # The server's hostname or IP address
 size = 1
 binary_stream = io.BytesIO()
 
