@@ -21,8 +21,9 @@
 
 
 int main(int argc, char *argv[]) {
+    int                      previous_message_id;
     int                      sfd, s;
-    char                     buf[BUF_SIZE];
+    unsigned char            buf[BUF_SIZE];
     ssize_t                  nread;
     socklen_t                peer_addrlen;
     struct sockaddr_in       server;
@@ -34,9 +35,9 @@ int main(int argc, char *argv[]) {
     if ( (sfd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	bailout("socker() ");
 
-   server.sin_family      = AF_INET;  /* Server is in Internet Domain */
-   server.sin_port        = htons(atoi(argv[1]));         /* Use any available port      */
-   server.sin_addr.s_addr = INADDR_ANY; /* Server's Internet Address   */
+    server.sin_family      = AF_INET;  /* Server is in Internet Domain */
+    server.sin_port        = htons(atoi(argv[1]));         /* Use any available port      */
+    server.sin_addr.s_addr = INADDR_ANY; /* Server's Internet Address   */
 
    if ( (s=bind(sfd, (struct sockaddr *)&server, sizeof(server))) < 0)
       bailout("bind() ");
@@ -48,6 +49,7 @@ int main(int argc, char *argv[]) {
 
    for (;;) {
          long int counter = 0;
+
         char host[NI_MAXHOST], service[NI_MAXSERV], response[5];
 
         peer_addrlen = sizeof(peer_addr);
@@ -59,7 +61,7 @@ int main(int argc, char *argv[]) {
             continue;  // Ignore failed request
         }
 
-	buf[nread] = '\0';
+    	buf[nread] = '\0';
 
         s = getnameinfo((struct sockaddr *) &peer_addr, peer_addrlen, host, NI_MAXHOST,
                         service, NI_MAXSERV, NI_NUMERICSERV);
@@ -71,19 +73,32 @@ int main(int argc, char *argv[]) {
         }
         // Print the entire string received
         printf("Received string: '%s'\n", buf+6);
-        uint32_t myInt1 = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
-        uint32_t myInt2 = buf[4] + (buf[5] << 8);
-        printf("%ld %ld \n", myInt1, myInt2);
+        uint32_t message_id = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
+        uint32_t message_length = buf[4] + (buf[5] << 8);
+        printf("%ld %ld \n", message_id, message_length);
+        if (previous_message_id+1 == message_id){
+            if (message_length == nread-6){
+                response[4]=0;
+            }
+            else{
+            response[4]=1;
+            printf("Incorrect message length\n");
+            }
+        }
+        else {
+            response[4]=1;
+            printf("Incorrect message id\n");
+        }
+        previous_message_id = message_id;
+
         response[0]=buf[0];
         response[1]=buf[1];
         response[2]=buf[2];
         response[3]=buf[3];
-        response[4]=0;
-        // 0 - udalo
-        // 1 - nie udalo sie
 	if (sendto(sfd, response, sizeof(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen) < 0) {
 		printf("Failed to write response\n");
 	}
+
     }
 }
 
