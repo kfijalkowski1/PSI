@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
    for (;;) {
          long int counter = 0;
-        char host[NI_MAXHOST], service[NI_MAXSERV];
+        char host[NI_MAXHOST], service[NI_MAXSERV], response[3] = "OK";
         double stimestamp, rtimestamp;
         struct timeval tv;
 
@@ -60,6 +60,8 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "failed recvfrom\n");
             continue;  // Ignore failed request
         }
+
+	buf[nread] = '\0';
 
         s = getnameinfo((struct sockaddr *) &peer_addr, peer_addrlen, host, NI_MAXHOST,
                         service, NI_MAXSERV, NI_NUMERICSERV);
@@ -75,7 +77,11 @@ int main(int argc, char *argv[]) {
          printf("Received counter = %ld time_delta = %10.2lf\n", counter, rtimestamp - stimestamp );
 
         // Print the entire string received
-        printf("Received string: '%s'\n", buf);
+        printf("Received string: '%s'\n", buf+6);
+
+	if (sendto(sfd, response, strlen(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen) < 0) {
+		printf("Failed to write response\n");
+	}
     }
 }
 
