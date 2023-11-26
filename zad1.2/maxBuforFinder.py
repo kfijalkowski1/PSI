@@ -1,8 +1,6 @@
 import socket
 import sys
 import io
-import time
-import math
 
 HOST = 'z26_z11_server'  # The server's hostname or IP address
 size = 1
@@ -64,7 +62,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
     else:
       last_not_working = cur_length
 
-  print(f"Result: {round(cur_length)}")
+  print(f"Result: {round(cur_length) - response}")
 
 
 print('Client finished.')
