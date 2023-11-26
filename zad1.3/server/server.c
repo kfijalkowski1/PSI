@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
             printf("Incorrect message length\n");
             response[4] = 1;
         }
-        if (previousMessageId + 1 != messageId){
+        if (previousMessageId + 1 < messageId){
             printf("Incorrect message id\n");
             response[4] = 1;
         }
@@ -82,6 +82,8 @@ int main(int argc, char *argv[]) {
             printf("Failed to send response\n");
         }
 
-        previousMessageId = messageId;
+        if (messageId == previousMessageId + 1) {
+            previousMessageId = messageId;
+        }
     }
 }
