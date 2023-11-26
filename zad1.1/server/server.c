@@ -1,104 +1,87 @@
-﻿/* (c) Grzegorz Blinowski 2000-2023 [ PSI] */
-/* this example from: getaddrinfo man page */
-
-#include <err.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+﻿#include <stdio.h>
 #include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
+#include <netdb.h>
 
-#define BUF_SIZE 500
-#define DGRAMSIZE 1024
+#define BUFFER_SIZE 500
 
-#define bailout(s) { perror( s ); exit(1);  }
-#define Usage() { errx( 0, "Usage: %s address-or-ip [port]\n", argv[0]); }
-#define timeinms(tv) ( (tv.tv_sec) * 1000.0 + (tv.tv_usec) / 1000.0 )
-
+#define throwError(msg) { fprintf(stderr, msg); exit(1); }
 
 int main(int argc, char *argv[]) {
-    int                      previous_message_id;
-    int                      sfd, s;
-    unsigned char            buf[BUF_SIZE];
-    ssize_t                  nread;
-    socklen_t                peer_addrlen;
-    struct sockaddr_in       server;
-    struct sockaddr_storage  peer_addr;
+    int socketFD;
 
-    if (argc != 2)
-        Usage();
+    struct sockaddr_in server;
+    struct sockaddr_storage peerAddress;
 
-    if ( (sfd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	bailout("socker() ");
+    unsigned char inputBuffer[BUFFER_SIZE];
+    unsigned char response[5];
 
-    server.sin_family      = AF_INET;  /* Server is in Internet Domain */
-    server.sin_port        = htons(atoi(argv[1]));         /* Use any available port      */
-    server.sin_addr.s_addr = INADDR_ANY; /* Server's Internet Address   */
+    uint32_t previousMessageId = 0;
 
-   if ( (s=bind(sfd, (struct sockaddr *)&server, sizeof(server))) < 0)
-      bailout("bind() ");
-   printf("bind() successful\n");
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s port\n", argv[0]);
+        exit(1);
+    }
 
+    if ((socketFD = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        throwError("socket creation failed\n");
+    }
 
-    /* Read datagrams and echo them back to sender. */
-   printf("waiting for packets...\n");
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(atoi(argv[1]));
 
-   for (;;) {
-         long int counter = 0;
+    if (bind(socketFD, (struct sockaddr *) &server, sizeof(server)) < 0) {
+        throwError("port bind failed\n");
+    }
 
-        char host[NI_MAXHOST], service[NI_MAXSERV], response[5];
+    printf("Waiting for transmision\n");
+    while (1) {
+        socklen_t peerAddressLen = sizeof(peerAddress);
 
-        peer_addrlen = sizeof(peer_addr);
-        nread = recvfrom(sfd, buf, BUF_SIZE - 1, 0,
-                         (struct sockaddr *) &peer_addr, &peer_addrlen);
-        printf("recvfrom ok\n");
-        if (nread < 0) {
-            fprintf(stderr, "failed recvfrom\n");
-            continue;  // Ignore failed request
-        }
+        ssize_t dataLength = recvfrom(socketFD, inputBuffer, BUFFER_SIZE - 1, 0, 
+            (struct sockaddr *) &peerAddress, &peerAddressLen);
 
-    	buf[nread] = '\0';
-
-        s = getnameinfo((struct sockaddr *) &peer_addr, peer_addrlen, host, NI_MAXHOST,
-                        service, NI_MAXSERV, NI_NUMERICSERV);
-        if (s == 0)
-            printf("Received %zd bytes from %s:%s\n", nread, host, service);
-        else {
-            fprintf(stderr, "getnameinfo() error: %s\n", gai_strerror(s));
+        if (dataLength < 0) {
+            fprintf(stderr, "Packet receive failed\n");
             continue;
         }
-        // Print the entire string received
-        printf("Received string: '%s'\n", buf+6);
-        uint32_t message_id = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
-        uint32_t message_length = buf[4] + (buf[5] << 8);
-        printf("%ld %ld \n", message_id, message_length);
-        if (previous_message_id+1 == message_id){
-            if (message_length == nread-6){
-                response[4]=0;
-            }
-            else{
-            response[4]=1;
+
+        inputBuffer[dataLength] = '\0';
+
+        printf("Received %zd bytes\n", dataLength);
+
+        if (dataLength < 6) {
+            printf("Message too short, dropping\n");
+            continue;
+        }
+
+        uint32_t messageId = inputBuffer[0] + (inputBuffer[1] << 8) + (inputBuffer[2] << 16) + (inputBuffer[3] << 24);
+        uint32_t messageLength = inputBuffer[4] + (inputBuffer[5] << 8);
+
+        printf("Message id: %u, length: %u\n", messageId, messageLength);
+        printf("Start of payload: %.*s...\n", 10, inputBuffer+6);
+
+        response[0] = inputBuffer[0];
+        response[1] = inputBuffer[1];
+        response[2] = inputBuffer[2];
+        response[3] = inputBuffer[3];
+        response[4] = 0;
+
+        if (messageLength + 6 != dataLength){
             printf("Incorrect message length\n");
-            }
+            response[4] = 1;
         }
-        else {
-            response[4]=1;
+        if (previousMessageId + 1 != messageId){
             printf("Incorrect message id\n");
+            response[4] = 1;
         }
-        previous_message_id = message_id;
 
-        response[0]=buf[0];
-        response[1]=buf[1];
-        response[2]=buf[2];
-        response[3]=buf[3];
-	if (sendto(sfd, response, sizeof(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen) < 0) {
-		printf("Failed to write response\n");
-	}
+        if (sendto(socketFD, response, sizeof(response), 0, 
+            (struct sockaddr *) &peerAddress, peerAddressLen) < 0) {
 
+            printf("Failed to send response\n");
+        }
+
+        previousMessageId = messageId;
     }
 }
-
