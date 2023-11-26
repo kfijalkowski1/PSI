@@ -6,7 +6,7 @@ import sys
 import io
 import time
 
-HOST = 'z26_z11_server'  # The server's hostname or IP address
+HOST = 'z26_z13_server'  # The server's hostname or IP address
 size = 1
 binary_stream = io.BytesIO()
 
@@ -31,14 +31,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
     binary_stream.seek(0)
     stream_data = binary_stream.read()
     print("Sending message ", repr(data), " with length = ", data_length)
-
+    
     s.sendto(stream_data, (HOST, port))
     response = s.recv(1024)
 
     print('Received', int.from_bytes(response[:4], "little"), "Success" if response[4]==0  else "Failed" )
 
     frame_id += 1
-    time.sleep(0.1)
+    time.sleep(1)
 
 
 print('Client finished.')

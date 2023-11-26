@@ -1,14 +1,34 @@
 version: "3.0"
 services:
-  client:
-    container_name: z26_z11_client
-    build: ./client
-    tty: true
-    cap_add:
-    - NET_ADMIN
-  server:
-    container_name: z26_z11_server
+  z26_z13_server:
+    container_name: z26_z13_server
     build: ./server
+    image: z26_z13_server
     tty: true
     cap_add:
-    - NET_ADMIN
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z13_server
+    hostname: z26_z13_server
+  
+  z26_z13_client:
+    container_name: z26_z13_client
+    build: ./client
+    image: z26_z13_client
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z13_client
+    hostname: z26_z13_client
+    depends_on:
+      - z26_z13_server
+
+networks:
+  z26_network:
+    external: true
+
