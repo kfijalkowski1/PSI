@@ -15,7 +15,7 @@ else:
 print("Will send to ", HOST, ":", port)
 
 
-frame_id = 2
+frame_id = 1
 
 def send_msg(msg_length):
   global frame_id
@@ -38,9 +38,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
   last_not_working = 0
   cur_length = 1
   stop = False
-
-  # just coz
-  send_msg(int(cur_length))
 
   # looking for too big value
   while True:
