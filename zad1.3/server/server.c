@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
             response[4] = 1;
         }
         if (previousMessageId + 1 < messageId){
-            printf("Incorrect message id\n");
+            printf("Incorrect message id, expected: %d\n", previousMessageId + 1);
             response[4] = 1;
         }
 

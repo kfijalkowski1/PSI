@@ -3,9 +3,10 @@ import sys
 import io
 import time
 
-socket.settimeout(0.1)
+host_address = "z26_z13_server"
 
-host_address = "z26_z11_server"
+RED = "\033[0;31m"
+CLEAR = "\033[0m"
 
 if len(sys.argv) < 2:
     print("no port provided, using 8000")
@@ -14,6 +15,7 @@ else:
     port = int(sys.argv[1])
 
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+    s.settimeout(0.1)
     frame_id = 1
     while True:
         data = "314159265358979323846264338327950288419716939937510".encode("ascii")
@@ -35,15 +37,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             try:
                 response = s.recv(1024)
 
-                success = response[4] == 0
+                response_id = int.from_bytes(response[:4], "little")
+
+                if response_id == frame_id:
+                    success = response[4] == 0
 
                 print(
                     "Message id:",
-                    int.from_bytes(response[:4], "little"),
-                    "Success" if success else "Failed",
+                    response_id,
+                    "Success" if success else f"{RED}Failed{CLEAR}",
                 )
             except TimeoutError:
                 success = False
+                print(f"{RED}Response timeout{CLEAR}")
+
+            time.sleep(0.3)
 
         frame_id += 1
-        time.sleep(0.1)
+        time.sleep(1)
