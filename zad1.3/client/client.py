@@ -35,12 +35,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         while not success:
             s.sendto(stream_data, (host_address, port))
             try:
-                response = s.recv(1024)
+                matching_id = False
+                while not matching_id:
+                    response = s.recv(1024)
 
-                response_id = int.from_bytes(response[:4], "little")
+                    response_id = int.from_bytes(response[:4], "little")
 
-                if response_id == frame_id:
-                    success = response[4] == 0
+                    if response_id == frame_id:
+                        success = response[4] == 0
+                        matching_id = True
 
                 print(
                     "Message id:",
