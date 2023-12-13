@@ -1,22 +1,34 @@
 ﻿import socket
 import sys
+import io
+import time
 
-HOST = "z26_z21_server"  # The server's hostname or IP address
+host_address = "z26_z21_server"
 
 if len(sys.argv) < 2:
-    print("no port, using 8000")
+    print("no port provided, using 8000")
     port = 8000
 else:
     port = int(sys.argv[1])
 
-print("Will connect to ", HOST, ":", port)
-
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, port))
-    #    s.sendall(b'0123456789')
-    # what happens when we send more data to server accepting only 10B at a time?
-    s.sendall(b"Hello, world!")
-    data = s.recv(1024)
+    s.connect((host_address, port))
 
-print("Received", repr(data))
-print("Client finished.")
+    frame_id = 1
+    while True:
+        data = "314159265358979323846264338327950288419716939937510".encode("ascii")
+        data_length = len(data)
+        data_frame = (
+            frame_id.to_bytes(4, "little") + data_length.to_bytes(2, "little") + data
+        )
+
+        binary_stream = io.BytesIO()
+        binary_stream.write(data_frame)
+        binary_stream.seek(0)
+        stream_data = binary_stream.read()
+        print("Sending message", repr(data), "of length =", data_length)
+
+        s.sendall(stream_data)
+
+        frame_id += 1
+        time.sleep(0.1)
