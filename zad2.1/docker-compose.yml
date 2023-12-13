@@ -1,0 +1,34 @@
+version: "3.0"
+services:
+  z26_z21_server:
+    container_name: z26_z21_server
+    build: ./server
+    image: z26_z21_server
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z21_server
+    hostname: z26_z21_server
+  
+  z26_z21_client:
+    container_name: z26_z21_client
+    build: ./client
+    image: z26_z21_client
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z21_client
+    hostname: z26_z21_client
+    depends_on:
+      - z26_z21_server
+
+networks:
+  z26_network:
+    external: true
+
