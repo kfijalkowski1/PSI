@@ -64,5 +64,7 @@ int main(int argc, char *argv[]) {
                 printf("Start of payload: %.*s...\n", 10, inputBuffer+6);
             }
         } while (dataLength > 0);
+
+        close(connectionFD);
     }
 }
