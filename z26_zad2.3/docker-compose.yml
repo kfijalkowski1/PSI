@@ -1,0 +1,34 @@
+version: "3.0"
+services:
+  z26_z23_server:
+    build: ./server
+    image: z26_z23_server
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z23_server
+    hostname: z26_z23_server
+  
+  z26_z23_client:
+    build: ./client
+    image: z26_z23_client
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_z23_client
+    hostname: z26_z23_client
+    depends_on:
+      - z26_z23_server
+    deploy:
+      replicas: 15
+
+networks:
+  z26_network:
+    external: true
+
