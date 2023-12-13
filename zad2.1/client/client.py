@@ -3,7 +3,7 @@ import sys
 import io
 import time
 
-host_address = "z26_z11_server"
+host_address = "z26_z21_server"
 
 if len(sys.argv) < 2:
     print("no port provided, using 8000")
