@@ -16,5 +16,5 @@ services:
 
 networks:
   z26_network:
-#    external: true
+    external: true #TODO important comment only to test locally
 
