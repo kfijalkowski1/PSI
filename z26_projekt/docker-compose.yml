@@ -1,0 +1,20 @@
+version: "3.0"
+services:
+  z26_project:
+    build: ./src
+    image: z26_project
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_project
+    hostname: z26_project
+    deploy:
+      replicas: 5
+
+networks:
+  z26_network:
+    external: true
+

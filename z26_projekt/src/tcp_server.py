@@ -1,6 +1,5 @@
-from globals import FILE_STATE
+import logger
 
 
-def start_server():
-    print(FILE_STATE)
-    FILE_STATE.append(124)
+def start():
+    logger.info("TCP server started")
