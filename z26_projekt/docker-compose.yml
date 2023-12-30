@@ -11,8 +11,8 @@ services:
         aliases:
           - z26_project
     hostname: z26_project
-#    deploy:
-#      replicas: 5
+    deploy:
+      replicas: 2
 
 networks:
   z26_network:
