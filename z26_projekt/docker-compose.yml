@@ -11,10 +11,10 @@ services:
         aliases:
           - z26_project
     hostname: z26_project
-    deploy:
-      replicas: 5
+#    deploy:
+#      replicas: 5
 
 networks:
   z26_network:
-    external: true
+#    external: true
 
