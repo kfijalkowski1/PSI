@@ -9,3 +9,5 @@ CLIENT_ID = ""
 
 CONNECTIONS = {}
 CONNECTIONS_LOCK = threading.Lock()
+
+TCP_PORT = 8888

@@ -22,8 +22,9 @@ class Broadcaster(ExceptThread):
         addresses = list(set(addresses))
 
         # TODO use data_parser
-        data = struct.pack("16sH", globals.CLIENT_ID.bytes, config.TCP_PORT)
+        data = struct.pack("16sH", globals.CLIENT_ID.bytes, globals.TCP_PORT)
 
+        logger.info("UDP broadcaster started")
         while True:
             for ip in addresses:
                 logger.debug(f"Broadcasting on {ip}")
@@ -43,6 +44,8 @@ class Server(ExceptThread):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(("", config.UDP_PORT))
+
+            logger.info("UDP server started")
             while True:
                 (data, (address, port)) = s.recvfrom(1024)
 
@@ -66,4 +69,3 @@ class Server(ExceptThread):
 def start():
     Broadcaster().start()
     Server().start()
-    logger.info("UDP server started")
