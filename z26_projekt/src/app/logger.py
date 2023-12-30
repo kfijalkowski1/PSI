@@ -26,6 +26,10 @@ def info(msg):
     display(CYAN, "[  INFO ]", msg)
 
 
+def success(msg):
+    display(GREEN, "[SUCCESS]", msg)
+
+
 def warning(msg):
     display(YELLOW, "[WARNING]", msg)
 

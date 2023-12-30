@@ -8,9 +8,9 @@ import logger
 from utils import ExceptThread
 
 
-class Handler(ExceptThread):
+class Sender(ExceptThread):
     def __init__(self, sock, address, port, client_id):
-        super().__init__(f"tcp_handler{address}_{port}")
+        super().__init__(f"tcp_sender{client_id}")
 
         self.sock = sock
         self.address = address
@@ -18,11 +18,37 @@ class Handler(ExceptThread):
         self.client_id = client_id
 
     def main(self):
-        logger.info(f"Connection established with client {self.client_id}!")
+        s = self.sock
+        try:
+            while True:
+                s.sendall(b"Hello, world!")
+
+                time.sleep(5)
+        except BrokenPipeError:
+            logger.warning(
+                f"Socket closed unexpectedly, sender disconnecting from {self.client_id}"
+            )
+
+
+class Reciever(ExceptThread):
+    def __init__(self, sock, address, port, client_id):
+        super().__init__(f"tcp_reciever{client_id}")
+
+        self.sock = sock
+        self.address = address
+        self.port = port
+        self.client_id = client_id
+
+    def main(self):
         s = self.sock
         while True:
-            s.sendall(b"Hello, world!")
             data = s.recv(1024)
+            if len(data) == 0:
+                logger.warning(
+                    f"Socket closed unexpectedly, reciever disconnecting from {self.client_id}"
+                )
+                return
+
             logger.info("Recieved " + str(data))
 
             time.sleep(5)
@@ -44,8 +70,10 @@ def accept(sock: socket.socket, address, port):
         "address": address,
         "port": port,
     }
+    logger.success(f"Connection established with client {client_id}!")
 
-    Handler(sock, address, port, client_id).start()
+    Sender(sock, address, port, client_id).start()
+    Reciever(sock, address, port, client_id).start()
 
 
 def start(address, port, client_id):

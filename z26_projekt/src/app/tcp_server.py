@@ -16,7 +16,7 @@ class Server(ExceptThread):
 
         s.listen()
 
-        logger.info(f"TCP server started on port {globals.TCP_PORT}")
+        logger.success(f"TCP server started on port {globals.TCP_PORT}")
         while True:
             (client_socket, (ip, port)) = s.accept()
 

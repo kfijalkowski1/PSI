@@ -24,7 +24,7 @@ class Broadcaster(ExceptThread):
         # TODO use data_parser
         data = struct.pack("16sH", globals.CLIENT_ID.bytes, globals.TCP_PORT)
 
-        logger.info("UDP broadcaster started")
+        logger.success("UDP broadcaster started")
         while True:
             for ip in addresses:
                 logger.debug(f"Broadcasting on {ip}")
@@ -45,7 +45,7 @@ class Server(ExceptThread):
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(("", config.UDP_PORT))
 
-            logger.info("UDP server started")
+            logger.success("UDP server started")
             while True:
                 (data, (address, port)) = s.recvfrom(1024)
 
