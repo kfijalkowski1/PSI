@@ -10,10 +10,10 @@ def scan_folder(folder_path):
 
         with globals.folder_state_lock:
             print("Scanning folder...")
-            files_to_delete = [file for file in globals.folder_state if globals.folder_state[file].status == "usuniety"]
+            #files_to_delete = [file for file in globals.folder_state if globals.folder_state[file].status == "usuniety"]
 
-            for file in files_to_delete:
-                del globals.folder_state[file]
+            #for file in files_to_delete:
+            #    del globals.folder_state[file]
 
             current_timestamp = time.time()
 
