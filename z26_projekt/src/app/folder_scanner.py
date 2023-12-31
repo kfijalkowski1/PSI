@@ -10,6 +10,13 @@ def scan_folder(folder_path):
 
         with globals.folder_state_lock:
             print("Scanning folder...")
+            files_to_delete = [file for file in globals.folder_state if globals.folder_state[file].status == "usuniety"]
+
+            for file in files_to_delete:
+                del globals.folder_state[file]
+
+            current_timestamp = time.time()
+
             current_files = set(os.listdir(folder_path))
 
 
@@ -30,8 +37,8 @@ def scan_folder(folder_path):
             known_files = set(globals.folder_state.keys())
             removed_files = known_files - current_files
             for file in removed_files:
-                print(f"File removed: {file}")
-                del globals.folder_state[file]
+                print(f"File removed: {file} in timestamp: {current_timestamp}")
+                globals.folder_state[file].update(current_timestamp, 'usuniety')
 
         print("current state:")
         for file, state in globals.folder_state.items():
@@ -41,4 +48,4 @@ def scan_folder(folder_path):
         time.sleep(30)
 
 if __name__ == "__main__":
-    scan_folder('/home/users/mbienko2/projekt/psi/z26_projekt/src')  # Replace with your folder path
+    scan_folder('/home/users/mbienko2/projekt/psi/z26_projekt/src/app')  # Replace with your folder path
