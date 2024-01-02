@@ -5,7 +5,8 @@ import uuid
 import globals
 import logger
 from utils import ExceptThread
-from classes import ConnectionState
+from classes import ConnectionState, FileStatus
+import data_parser
 
 
 class Sender(ExceptThread):
@@ -25,11 +26,11 @@ class Sender(ExceptThread):
                     logger.debug(f"Sender disconnecting from {self.conn.client_id}")
                     return
 
-                # TODO: handle and serialise message
+                data = message.serialize()
 
-                prefix = struct.pack("I", len(message))
+                prefix = struct.pack("I", len(data))
                 s.sendall(prefix)
-                s.sendall(message)
+                s.sendall(data)
                 message = None
         except BrokenPipeError:
             logger.debug(
@@ -72,7 +73,49 @@ class Reciever(ExceptThread):
 
                 logger.info("Recieved " + str(len(data)) + " bytes")
 
-                # TODO: parse and handle message
+                message = data_parser.DataParser.parse_stream_to_content(data)
+                logger.info(message)
+                if isinstance(message, data_parser.FileList):
+                    for file in message.file_records.values():
+                        if file.name not in globals.folder_state:
+                            if file.status == FileStatus.DELETED:
+                                globals.folder_state[file.name] = file
+                            else:
+                                self.conn.transmit_queue.put(
+                                    data_parser.FileRequest(file.name)
+                                )
+                                pass
+                        else:
+                            if (
+                                globals.folder_state[file.name].modification_timestamp
+                                < file.modification_timestamp
+                            ):
+                                if file.status == FileStatus.DELETED:
+                                    # TODO delete file
+                                    pass
+                                else:
+                                    self.conn.transmit_queue.put(
+                                        data_parser.FileRequest(file.name)
+                                    )
+                                    pass
+
+                elif isinstance(message, data_parser.FileRequest):
+                    self.conn.transmit_queue.put(
+                        data_parser.FileTransmission(
+                            message.file_name,
+                            globals.folder_state[
+                                message.file_name
+                            ].modification_timestamp,
+                            # TODO read file contents
+                            b"AAAAAAAAAAAAA",
+                        )
+                    )
+
+                    pass
+                elif isinstance(message, data_parser.FileTransmission):
+                    logger.info(message.encrypted_content)
+                    # TODO save file
+                    pass
 
                 data = None
 

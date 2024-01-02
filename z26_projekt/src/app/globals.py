@@ -1,4 +1,3 @@
-from classes import FileState
 import threading
 
 folder_state = {}

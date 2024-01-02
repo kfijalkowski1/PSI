@@ -3,8 +3,10 @@ import uuid
 
 import tcp_server
 import udp_server
+import folder_scanner
 import logger
 import globals
+
 
 if __name__ == "__main__":
     globals.CLIENT_ID = uuid.uuid4()
@@ -13,6 +15,7 @@ if __name__ == "__main__":
 
     tcp_server.start()
     udp_server.start()
+    folder_scanner.start()
 
     logger.info("All services started")
 
