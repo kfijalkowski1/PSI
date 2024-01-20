@@ -1,31 +1,9 @@
-﻿import threading
-from datetime import datetime
-import queue
-import time
+﻿import queue
 import socket
 
 import globals
 import logger
-
-
-class FileState:
-    def __init__(self, name, modification_timestamp=None, status="aktualny"):
-        self.name = name
-        self.modification_timestamp = (
-            modification_timestamp
-            if modification_timestamp is not None
-            else time.time()
-        )
-        self.status = status
-
-    def update(self, modification_timestamp=None, status=None):
-        if modification_timestamp:
-            self.modification_timestamp = modification_timestamp
-        if status:
-            self.status = status
-
-    def __repr__(self):
-        return f"FileState(name='{self.name}', modification_timestamp='{self.modification_timestamp}', status='{self.status}')"
+import data_parser
 
 
 class ConnectionState:
@@ -44,8 +22,7 @@ class ConnectionState:
 
         self.open = False
 
-        # TODO: use dedicated class when data_parser is ready
-        self.transmit_queue.put(b"close")
+        self.transmit_queue.put(data_parser.CloseConnection())
         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
         logger.success(f"Closed connection with {self.client_id}")

@@ -6,6 +6,7 @@ import globals
 import logger
 from utils import ExceptThread
 from classes import ConnectionState
+import data_parser
 
 
 class Sender(ExceptThread):
@@ -20,16 +21,15 @@ class Sender(ExceptThread):
         try:
             while True:
                 message = queue.get()
-                # TODO: use dedicated class when data_parser is ready
-                if message == b"close":
+                if isinstance(message, data_parser.CloseConnection):
                     logger.debug(f"Sender disconnecting from {self.conn.client_id}")
                     return
 
-                # TODO: handle and serialise message
+                data = message.serialize()
 
-                prefix = struct.pack("I", len(message))
+                prefix = struct.pack("I", len(data))
                 s.sendall(prefix)
-                s.sendall(message)
+                s.sendall(data)
                 message = None
         except BrokenPipeError:
             logger.debug(
@@ -72,7 +72,49 @@ class Reciever(ExceptThread):
 
                 logger.info("Recieved " + str(len(data)) + " bytes")
 
-                # TODO: parse and handle message
+                message = data_parser.DataParser.parse_stream_to_content(data)
+                logger.info(message)
+                if isinstance(message, data_parser.FileList):
+                    for file in message.file_records.values():
+                        if file.name not in globals.folder_state:
+                            if file.status == data_parser.FileStatus.DELETED:
+                                globals.folder_state[file.name] = file
+                            else:
+                                self.conn.transmit_queue.put(
+                                    data_parser.FileRequest(file.name)
+                                )
+                                pass
+                        else:
+                            if (
+                                globals.folder_state[file.name].modification_timestamp
+                                < file.modification_timestamp
+                            ):
+                                if file.status == data_parser.FileStatus.DELETED:
+                                    # TODO delete file
+                                    pass
+                                else:
+                                    self.conn.transmit_queue.put(
+                                        data_parser.FileRequest(file.name)
+                                    )
+                                    pass
+
+                elif isinstance(message, data_parser.FileRequest):
+                    self.conn.transmit_queue.put(
+                        data_parser.FileTransmission(
+                            message.file_name,
+                            globals.folder_state[
+                                message.file_name
+                            ].modification_timestamp,
+                            # TODO read file contents
+                            b"AAAAAAAAAAAAA",
+                        )
+                    )
+
+                    pass
+                elif isinstance(message, data_parser.FileTransmission):
+                    logger.info(message.encrypted_content)
+                    # TODO save file
+                    pass
 
                 data = None
 
@@ -88,15 +130,14 @@ class Reciever(ExceptThread):
 
 def accept(sock: socket.socket, address, port):
     # send welcome message
-    # TODO use data_parser
     logger.debug("Sending welcome message...")
-    data = struct.pack("16s", globals.CLIENT_ID.bytes)
+    data = data_parser.TCPWelcome(globals.CLIENT_ID).serialize()
     sock.sendall(data)
 
     logger.debug("Recieving welcome message...")
     data = sock.recv(1024)
-    (client_id,) = struct.unpack("16s", data)
-    client_id = uuid.UUID(bytes=client_id)
+    tcp_welcome = data_parser.TCPWelcome.deserialize(data)
+    client_id = tcp_welcome.client_id
 
     globals.CONNECTIONS[client_id] = ConnectionState(sock, address, port, client_id)
     logger.success(f"Connection established with client {client_id}!")

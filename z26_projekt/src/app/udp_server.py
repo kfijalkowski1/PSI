@@ -1,12 +1,11 @@
 import socket
 import time
-import struct
-import uuid
 
 import logger
 import config
 import globals
 import tcp_handler
+import data_parser
 from utils import ExceptThread
 
 
@@ -21,8 +20,7 @@ class Broadcaster(ExceptThread):
         addresses = [interface[-1][0] for interface in interfaces]
         addresses = list(set(addresses))
 
-        # TODO use data_parser
-        data = struct.pack("16sH", globals.CLIENT_ID.bytes, globals.TCP_PORT)
+        data = data_parser.UDPDiscovery(globals.CLIENT_ID, globals.TCP_PORT).serialize()
 
         logger.success("UDP broadcaster started")
         while True:
@@ -49,11 +47,9 @@ class Server(ExceptThread):
             while True:
                 (data, (address, port)) = s.recvfrom(1024)
 
-                # TODO use data_parser
-                client_id_raw, port = struct.unpack("16sH", data)
-                client_id = uuid.UUID(bytes=client_id_raw)
+                discovery_packet = data_parser.UDPDiscovery.deserialize(data)
 
-                if client_id == globals.CLIENT_ID:
+                if discovery_packet.client_id == globals.CLIENT_ID:
                     continue
 
                 if not data:
@@ -61,9 +57,13 @@ class Server(ExceptThread):
                     continue
 
                 with globals.CONNECTIONS_LOCK:
-                    if client_id not in globals.CONNECTIONS.keys():
-                        logger.info(f"Detected new client {client_id}")
-                        tcp_handler.start(address, port, client_id)
+                    if discovery_packet.client_id not in globals.CONNECTIONS.keys():
+                        logger.info(f"Detected new client {discovery_packet.client_id}")
+                        tcp_handler.start(
+                            address,
+                            discovery_packet.tcp_port,
+                            discovery_packet.client_id,
+                        )
 
 
 def start():
