@@ -5,7 +5,7 @@ import uuid
 import globals
 import logger
 from utils import ExceptThread
-from classes import ConnectionState, FileStatus
+from classes import ConnectionState
 import data_parser
 
 
@@ -21,8 +21,7 @@ class Sender(ExceptThread):
         try:
             while True:
                 message = queue.get()
-                # TODO: use dedicated class when data_parser is ready
-                if message == b"close":
+                if isinstance(message, data_parser.CloseConnection):
                     logger.debug(f"Sender disconnecting from {self.conn.client_id}")
                     return
 
@@ -78,7 +77,7 @@ class Reciever(ExceptThread):
                 if isinstance(message, data_parser.FileList):
                     for file in message.file_records.values():
                         if file.name not in globals.folder_state:
-                            if file.status == FileStatus.DELETED:
+                            if file.status == data_parser.FileStatus.DELETED:
                                 globals.folder_state[file.name] = file
                             else:
                                 self.conn.transmit_queue.put(
@@ -90,7 +89,7 @@ class Reciever(ExceptThread):
                                 globals.folder_state[file.name].modification_timestamp
                                 < file.modification_timestamp
                             ):
-                                if file.status == FileStatus.DELETED:
+                                if file.status == data_parser.FileStatus.DELETED:
                                     # TODO delete file
                                     pass
                                 else:
@@ -131,15 +130,14 @@ class Reciever(ExceptThread):
 
 def accept(sock: socket.socket, address, port):
     # send welcome message
-    # TODO use data_parser
     logger.debug("Sending welcome message...")
-    data = struct.pack("16s", globals.CLIENT_ID.bytes)
+    data = data_parser.TCPWelcome(globals.CLIENT_ID).serialize()
     sock.sendall(data)
 
     logger.debug("Recieving welcome message...")
     data = sock.recv(1024)
-    (client_id,) = struct.unpack("16s", data)
-    client_id = uuid.UUID(bytes=client_id)
+    tcp_welcome = data_parser.TCPWelcome.deserialize(data)
+    client_id = tcp_welcome.client_id
 
     globals.CONNECTIONS[client_id] = ConnectionState(sock, address, port, client_id)
     logger.success(f"Connection established with client {client_id}!")

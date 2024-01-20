@@ -1,6 +1,6 @@
 import os
 import time
-from classes import FileState, FileStatus
+from data_parser import FileState, FileStatus
 import globals
 import data_parser
 from utils import ExceptThread
@@ -67,5 +67,5 @@ class Scanner(ExceptThread):
             time.sleep(5)
 
 
-def start():
-    Scanner("./test").run()
+def start(folder_path):
+    Scanner(folder_path).run()

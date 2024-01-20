@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     tcp_server.start()
     udp_server.start()
-    folder_scanner.start()
+    folder_scanner.start("./test")
 
     logger.info("All services started")
 
