@@ -1,6 +1,7 @@
+import os
 import socket
 import struct
-import uuid
+import time
 
 import globals
 import logger
@@ -73,7 +74,7 @@ class Reciever(ExceptThread):
                 logger.info("Recieved " + str(len(data)) + " bytes")
 
                 message = data_parser.DataParser.parse_stream_to_content(data)
-                logger.info(message)
+                logger.info(f'Received message: {message}')
                 if isinstance(message, data_parser.FileList):
                     for file in message.file_records.values():
                         if file.name not in globals.folder_state:
@@ -83,38 +84,43 @@ class Reciever(ExceptThread):
                                 self.conn.transmit_queue.put(
                                     data_parser.FileRequest(file.name)
                                 )
-                                pass
                         else:
                             if (
                                 globals.folder_state[file.name].modification_timestamp
                                 < file.modification_timestamp
                             ):
                                 if file.status == data_parser.FileStatus.DELETED:
-                                    # TODO delete file
-                                    pass
+                                    if os.path.exists(file.name):
+                                        os.remove(file.name)
+                                        logger.info(f'Deleted file: {file.name}')
+                                    else:
+                                        logger.warning(f'File {file.name} does not exist, therefore cannot be deleted')
                                 else:
                                     self.conn.transmit_queue.put(
                                         data_parser.FileRequest(file.name)
                                     )
-                                    pass
 
                 elif isinstance(message, data_parser.FileRequest):
+                    logger.info(f'Sending file {message.file_name}')
                     self.conn.transmit_queue.put(
                         data_parser.FileTransmission(
                             message.file_name,
                             globals.folder_state[
                                 message.file_name
                             ].modification_timestamp,
-                            # TODO read file contents
-                            b"AAAAAAAAAAAAA",
+                            open(message.file_name, 'rb').read()
                         )
                     )
 
-                    pass
                 elif isinstance(message, data_parser.FileTransmission):
-                    logger.info(message.encrypted_content)
-                    # TODO save file
-                    pass
+                    with globals.folder_state_lock:
+                        logger.info(f'Writing file {message.file_name} with data: {message.encrypted_content}')
+                        
+                        with open(message.file_name, 'wb') as fh:
+                            fh.write(message.encrypted_content)
+                            
+                        os.utime(message.file_name, message.time_of_modification)
+                        globals.folder_state[message.file_name].modification_timestamp = message.time_of_modification
 
                 data = None
 
