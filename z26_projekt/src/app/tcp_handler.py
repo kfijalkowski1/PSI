@@ -119,7 +119,7 @@ class Reciever(ExceptThread):
                         with open(message.file_name, 'wb') as fh:
                             fh.write(message.encrypted_content)
                             
-                        os.utime(message.file_name, message.time_of_modification)
+                        os.utime(message.file_name, times=(message.time_of_modification/1000, message.time_of_modification/1000))
                         globals.folder_state[message.file_name].modification_timestamp = message.time_of_modification
 
                 data = None
