@@ -34,3 +34,6 @@ class ConnectionState:
 
     def __repr__(self):
         return f"ConnectionState(client_id='{self.client_id}', address={self.address}, port={self.port})"
+
+    def __str__(self):
+        return f"client_id='{self.client_id}', address={self.address}, port={self.port}"

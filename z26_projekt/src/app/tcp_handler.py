@@ -112,7 +112,7 @@ class Reciever(ExceptThread):
 
                     pass
                 elif isinstance(message, data_parser.FileTransmission):
-                    logger.info(message.encrypted_content)
+                    logger.info(message.content)
                     # TODO save file
                     pass
 
