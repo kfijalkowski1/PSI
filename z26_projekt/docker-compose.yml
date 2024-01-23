@@ -1,9 +1,14 @@
 version: "3.0"
 services:
-  z26_project:
-    build: ./src
-    image: z26_project
+  z26_gui:
+    build:
+      context: ./src
+      dockerfile: dockerfile-gui
+    image: z26_gui
     tty: true
+    stdin_open: true
+    volumes:
+      - ./client1:/code/files_folder
     cap_add:
       - NET_ADMIN
     networks:
@@ -11,10 +16,26 @@ services:
         aliases:
           - z26_project
     hostname: z26_project
-    deploy:
-      replicas: 2
+
+  z26_server:
+    build:
+      context: ./src
+      dockerfile: dockerfile-server
+    volumes:
+      - ./client2:/code/files_folder
+    image: z26_server
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_project
+    hostname: z26_project
+#    deploy:
+#      replicas: 2
+
 
 networks:
   z26_network:
-    external: true #TODO important comment only to test locally
+#    external: true #TODO important comment only to test locally
 

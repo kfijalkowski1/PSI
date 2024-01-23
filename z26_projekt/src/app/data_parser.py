@@ -1,7 +1,7 @@
 from enum import Enum
 import struct
 import uuid
-
+from crypting import encrypt, decrypt
 
 class MessageType(Enum):
     FILE_LIST = 0
@@ -126,10 +126,11 @@ class FileTransmission:
         self.time_of_modification = time
         self.file_name = name
         self.file_size = len(content)
-        self.encrypted_content = content
+        self.content = content
 
     def serialize(self):
         # TODO encryption
+        encryptet_content = encrypt(self.content)
 
         return (
             struct.pack("B", self.message_type.value)
@@ -137,7 +138,7 @@ class FileTransmission:
             + self.file_name.encode("utf8")
             + b"\x00"
             + struct.pack("I", self.file_size)
-            + self.encrypted_content
+            + encryptet_content
         )
 
     def deserialize(stream: bytes):
@@ -150,6 +151,8 @@ class FileTransmission:
 
         size_len = len(stream) - struct.calcsize("I")
         size, content = struct.unpack(f"I{size_len}s", stream)
+
+        content = decrypt(content)
 
         return FileTransmission(name.decode("utf8"), time, content)
 
