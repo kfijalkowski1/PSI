@@ -1,38 +1,44 @@
-BOLD = "\033[1m"
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-BLUE = "\033[36m"
-CYAN = "\033[96m"
-GRAY = "\033[37m"
-CLEAR = "\033[0m"
-
-import inspect
 import os
+import datetime
+import logging
+import globals
 
 
-def display(color, text, msg):
-    stack_frame = inspect.stack()[2]
-    filename = os.path.splitext(os.path.basename(stack_frame.filename))[0]
-    line_number = stack_frame.lineno
-    print(f"{color}{text}", f"{BLUE}{filename}:{line_number}{color}", msg, CLEAR)
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+timestamp_str = datetime.datetime.today().strftime("%Y-%m-%d_%H-%M-%S-%f")
+logging_path = os.path.join("logs", f"{timestamp_str}.log")
+
+logging.basicConfig(filename=logging_path, format='%(asctime)s %(levelname)-8s %(message)s',
+                    encoding='utf-8', level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
+
+if not globals.gui:
+    # pipe with logs to console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+
+    console_formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+    console_handler.setFormatter(console_formatter)
+
+    logging.getLogger().addHandler(console_handler)
 
 
 def debug(msg):
-    display(GRAY, "[ DEBUG ]", msg)
+    logging.debug(msg)
 
 
 def info(msg):
-    display(CYAN, "[  INFO ]", msg)
+    logging.info(msg)
 
 
 def success(msg):
-    display(GREEN, "[SUCCESS]", msg)
+    logging.info("[SUCCESS] " + msg)
 
 
 def warning(msg):
-    display(YELLOW, "[WARNING]", msg)
+    logging.warning(msg)
 
 
 def error(msg):
-    display(f"{BOLD}{RED}", "[ ERROR ]", msg)
+    logging.error(msg)
