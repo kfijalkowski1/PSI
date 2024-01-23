@@ -4,6 +4,7 @@ from data_parser import FileState, FileStatus
 import globals
 import data_parser
 from utils import ExceptThread
+import logger
 
 
 class Scanner(ExceptThread):
@@ -32,6 +33,7 @@ class Scanner(ExceptThread):
                     modification_timestamp = int(os.path.getmtime(file_path) * 1000)
 
                     if file in globals.folder_state:
+                        logger.warning(f'dir: {globals.folder_state[file].modification_timestamp}, time: {modification_timestamp}')
                         if (
                             globals.folder_state[file].modification_timestamp
                             != modification_timestamp
@@ -43,7 +45,7 @@ class Scanner(ExceptThread):
                     else:
                         print(f"new file detected: {file}")
                         globals.folder_state[file] = FileState(
-                            file, modification_timestamp, FileStatus.LATEST
+                            file_path, modification_timestamp, FileStatus.LATEST
                         )
 
                 known_files = set(globals.folder_state.keys())
