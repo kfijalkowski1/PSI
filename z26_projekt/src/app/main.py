@@ -26,11 +26,13 @@ if __name__ == "__main__":
     globals.CLIENT_ID = uuid.uuid4()
     globals.gui = True if args.gui else False
 
-    logger.info(f"Client id is: {globals.CLIENT_ID.hex}")
     if globals.gui:
         logger.info("GUI starting")
         gui_thread = threading.Thread(target=run_gui)
         gui_thread.start()
+    logger.set_logger()
+
+    logger.info(f"Client id is: {globals.CLIENT_ID.hex}")
 
     tcp_server.start()
     udp_server.start()

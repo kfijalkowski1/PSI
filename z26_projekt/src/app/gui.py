@@ -45,7 +45,7 @@ def get_connections():
     for key, val in globals.CONNECTIONS.items():
         address = val.address
         port = val.port
-        result += f"client: {key}\n\taddress: {address}\n\tport: {port}"
+        result += f"client: {key}\n\taddress: {address}\n\tport: {port}\n"
     return result
 
 
@@ -77,4 +77,4 @@ def run_gui():
     with Live(generate_layout(), refresh_per_second=4) as live:
         while True:
             live.update(generate_layout())
-            sleep(0.25)
+            sleep(0.04)

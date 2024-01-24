@@ -108,10 +108,6 @@ class Reciever(ExceptThread):
                     file_name = message.file_name.split('/')[-1]
                     file_path = message.file_name
                     
-                    if globals.folder_state[file_name].status == data_parser.FileStatus.DELETED:
-                        # TODO dopisać logikę żeby kolega obok wiedział że plik jest deleted
-                        pass
-                    
                     logger.info(f'Sending file {file_name}')
                     with globals.folder_state_lock:  # TODO perhaps not needed
                         self.conn.transmit_queue.put(
