@@ -43,8 +43,8 @@ def get_file_states():
 def get_connections():
     result = ""
     for key, val in globals.CONNECTIONS.items():
-        address = val["address"]
-        port = val["port"]
+        address = val.address
+        port = val.port
         result += f"client: {key}\n\taddress: {address}\n\tport: {port}"
     return result
 

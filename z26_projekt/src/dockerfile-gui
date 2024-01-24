@@ -7,4 +7,4 @@ COPY ./app /code/app
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-CMD ["python", "app/main.py", "files_folder", "--gui"]
+CMD ["python", "app/main.py", "files_folder"]

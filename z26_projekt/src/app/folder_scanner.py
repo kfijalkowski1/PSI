@@ -14,15 +14,11 @@ class Scanner(ExceptThread):
         self.folder_path = folder_path
 
     def main(self):
-        print(f"Starting folder scan for: {self.folder_path}")
+        logger.info(f"Starting folder scan for: {self.folder_path}")
 
         while True:
             with globals.folder_state_lock:
-                print("Scanning folder...")
-                # files_to_delete = [file for file in globals.folder_state if globals.folder_state[file].status == "usuniety"]
-
-                # for file in files_to_delete:
-                #    del globals.folder_state[file]
+                logger.info("Scanning folder...")
 
                 current_timestamp = int(time.time() * 1000)
 
@@ -38,12 +34,12 @@ class Scanner(ExceptThread):
                             globals.folder_state[file].modification_timestamp
                             != modification_timestamp
                         ):
-                            print(f"file updated: {file}")
+                            logger.info(f"file updated: {file}")
                             globals.folder_state[file].update(
                                 modification_timestamp, FileStatus.LATEST
                             )
                     else:
-                        print(f"new file detected: {file}")
+                        logger.info(f"new file detected: {file}")
                         globals.folder_state[file] = FileState(
                             file_path, modification_timestamp, FileStatus.LATEST
                         )
@@ -51,21 +47,21 @@ class Scanner(ExceptThread):
                 known_files = set(globals.folder_state.keys())
                 removed_files = known_files - current_files
                 for file in removed_files:
-                    print(f"File removed: {file} in timestamp: {current_timestamp}")
+                    logger.info(f"File removed: {file} in timestamp: {current_timestamp}")
                     globals.folder_state[file].update(
                         current_timestamp, FileStatus.DELETED
                     )
 
-            print("current state:")
+            logger.info("current state:")
             for file, state in globals.folder_state.items():
-                print(f"{file}: {state}")
+                logger.info(f"{file}: {state}")
 
             for connection in globals.CONNECTIONS.values():
                 connection.transmit_queue.put(
                     data_parser.FileList(globals.folder_state)
                 )
 
-            print("scan completed waiting for next scan...")
+            logger.info("scan completed waiting for next scan...")
             time.sleep(5)
 
 
