@@ -32,7 +32,7 @@ class Scanner(ExceptThread):
                         logger.warning(f'dir: {globals.folder_state[file].modification_timestamp}, time: {modification_timestamp}')
                         if (
                             globals.folder_state[file].modification_timestamp
-                            != modification_timestamp
+                            < modification_timestamp
                         ):
                             logger.info(f"file updated: {file}")
                             globals.folder_state[file].update(
