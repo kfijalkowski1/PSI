@@ -35,7 +35,7 @@ class Scanner(ExceptThread):
             current_files = set(os.listdir(self.folder_path))
 
             for file_name in current_files:
-                file_path = os.path.join(self.folder_path, file)
+                file_path = os.path.join(self.folder_path, file_name)
                 modification_timestamp = int(os.path.getmtime(file_path) * 1000)
 
                 if file_name in globals.folder_state:

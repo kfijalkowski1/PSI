@@ -86,7 +86,7 @@ class Reciever(ExceptThread):
                                 globals.folder_state[file.name] = file
                             else:
                                 self.conn.transmit_queue.put(
-                                    data_parser.FileRequest(file_path)
+                                    data_parser.FileRequest(file.name)
                                 )
                         else:
                             if (
@@ -101,7 +101,7 @@ class Reciever(ExceptThread):
                                         logger.warning(f'File {file.name} does not exist, therefore cannot be deleted')
                                 else:
                                     self.conn.transmit_queue.put(
-                                        data_parser.FileRequest(file_path)
+                                        data_parser.FileRequest(file.name)
                                     )
 
                 elif isinstance(message, data_parser.FileRequest):
