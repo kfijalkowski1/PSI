@@ -1,14 +1,13 @@
 import os
 import socket
 import struct
-import time
 
 import globals
 import logger
 from utils import ExceptThread
 from classes import ConnectionState
 import data_parser
-
+import folder_scanner
 
 
 class Sender(ExceptThread):
@@ -76,6 +75,9 @@ class Reciever(ExceptThread):
 
                 message = data_parser.DataParser.parse_stream_to_content(data)
                 logger.info(f'Received message: {message}')
+
+                folder_scanner.FOLDER_SCANNER.scan()
+
                 if isinstance(message, data_parser.FileList):
                     for file in message.file_records.values():
                         file_name = file.name.split('/')[-1]
@@ -129,7 +131,7 @@ class Reciever(ExceptThread):
                         with open(file_path, 'wb') as fh:
                             fh.write(message.content)
                             
-                        os.utime(file_path, times=(message.time_of_modification/1000, message.time_of_modification/1000))
+                        os.utime(file_path, times=(message.time_of_modification / 1000, message.time_of_modification / 1000))
 
                 data = None
 
