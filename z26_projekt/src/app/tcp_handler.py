@@ -1,14 +1,13 @@
 import os
 import socket
 import struct
-import time
 
 import globals
 import logger
 from utils import ExceptThread
 from classes import ConnectionState
 import data_parser
-
+import folder_scanner
 
 
 class Sender(ExceptThread):
@@ -76,60 +75,56 @@ class Reciever(ExceptThread):
 
                 message = data_parser.DataParser.parse_stream_to_content(data)
                 logger.info(f'Received message: {message}')
+
+                folder_scanner.FOLDER_SCANNER.scan()
+
                 if isinstance(message, data_parser.FileList):
                     for file in message.file_records.values():
-                        file_name = file.name.split('/')[-1]
-                        file_path = file.name
-                        if file_name not in globals.folder_state:
+                        file_path = os.path.join(folder_scanner.FOLDER_SCANNER.folder_path, file.name)
+                        if file.name not in globals.folder_state:
                             if file.status == data_parser.FileStatus.DELETED:
-                                globals.folder_state[file_name] = file
+                                globals.folder_state[file.name] = file
                             else:
                                 self.conn.transmit_queue.put(
-                                    data_parser.FileRequest(file_path)
+                                    data_parser.FileRequest(file.name)
                                 )
                         else:
                             if (
-                                globals.folder_state[file_name].modification_timestamp
+                                globals.folder_state[file.name].modification_timestamp
                                 < file.modification_timestamp
                             ):
-                                if str(file.status) == "1":
+                                if file.status == data_parser.FileStatus.DELETED:
                                     if os.path.exists(file_path):
                                         os.remove(file_path)
-                                        logger.info(f'Deleted file: {file_name}')
+                                        logger.info(f'Deleted file: {file.name}')
                                     else:
-                                        logger.warning(f'File {file_name} does not exist, therefore cannot be deleted')
+                                        logger.warning(f'File {file.name} does not exist, therefore cannot be deleted')
                                 else:
                                     self.conn.transmit_queue.put(
-                                        data_parser.FileRequest(file_path)
+                                        data_parser.FileRequest(file.name)
                                     )
 
                 elif isinstance(message, data_parser.FileRequest):
-                    
-                    file_name = message.file_name.split('/')[-1]
-                    file_path = message.file_name
-                    
-                    logger.info(f'Sending file {file_name}')
+                    logger.info(f'Sending file {message.file_name}')
                     with globals.folder_state_lock:
                         self.conn.transmit_queue.put(
                             data_parser.FileTransmission(
-                                file_path,
+                                message.file_name,
                                 globals.folder_state[
-                                    file_name
+                                    message.file_name
                                 ].modification_timestamp,
-                                open(file_path, 'rb').read()
+                                open(os.path.join(folder_scanner.FOLDER_SCANNER.folder_path, message.file_name), 'rb').read()
                             )
                         )
 
                 elif isinstance(message, data_parser.FileTransmission):
-                    file_name = message.file_name.split('/')[-1]
-                    file_path = message.file_name
                     with globals.folder_state_lock:
-                        logger.info(f'Writing file {file_name} with data: {message.content}')
-                        
+                        logger.info(f'Writing file {message.file_name} with data: {message.content}')
+                        file_path = os.path.join(folder_scanner.FOLDER_SCANNER.folder_path, message.file_name)
                         with open(file_path, 'wb') as fh:
                             fh.write(message.content)
                             
-                        os.utime(file_path, times=(message.time_of_modification/1000, message.time_of_modification/1000))
+                        os.utime(file_path, times=(message.time_of_modification / 1000, message.time_of_modification / 1000))
 
                 data = None
 

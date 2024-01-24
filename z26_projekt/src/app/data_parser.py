@@ -71,7 +71,7 @@ class FileState:
         name_size = len(stream) - struct.calcsize("BL")
         rec_type, time, name = struct.unpack(f"BL{name_size}s", stream)
 
-        return FileState(name.decode("utf8"), time, rec_type)
+        return FileState(name.decode("utf8"), time, FileStatus(rec_type))
 
     def __repr__(self):
         return f"FileState(name='{self.name}', modification_timestamp='{self.modification_timestamp}', status='{self.status}')"
