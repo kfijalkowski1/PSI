@@ -34,32 +34,32 @@ class Scanner(ExceptThread):
 
             current_files = set(os.listdir(self.folder_path))
 
-            for file in current_files:
+            for file_name in current_files:
                 file_path = os.path.join(self.folder_path, file)
                 modification_timestamp = int(os.path.getmtime(file_path) * 1000)
 
-                if file in globals.folder_state:
-                    logger.warning(f'dir: {globals.folder_state[file].modification_timestamp}, time: {modification_timestamp}')
+                if file_name in globals.folder_state:
+                    logger.warning(f'dir: {globals.folder_state[file_name].modification_timestamp}, time: {modification_timestamp}')
                     if (
-                        globals.folder_state[file].modification_timestamp
+                        globals.folder_state[file_name].modification_timestamp
                         < modification_timestamp
                     ):
-                        logger.info(f"file updated: {file}")
-                        globals.folder_state[file].update(
+                        logger.info(f"file updated: {file_name}")
+                        globals.folder_state[file_name].update(
                             modification_timestamp, FileStatus.LATEST
                         )
                 else:
-                    logger.info(f"new file detected: {file}")
-                    globals.folder_state[file] = FileState(
-                        file_path, modification_timestamp, FileStatus.LATEST
+                    logger.info(f"new file detected: {file_name}")
+                    globals.folder_state[file_name] = FileState(
+                        file_name, modification_timestamp, FileStatus.LATEST
                     )
 
             known_files = set(globals.folder_state.keys())
             removed_files = known_files - current_files
-            for file in removed_files:
+            for file_name in removed_files:
                 current_timestamp = int(time.time() * 1000)
-                logger.info(f"File removed: {file} in timestamp: {current_timestamp}")
-                globals.folder_state[file].update(
+                logger.info(f"File removed: {file_name} in timestamp: {current_timestamp}")
+                globals.folder_state[file_name].update(
                     current_timestamp, FileStatus.DELETED
                 )
 
