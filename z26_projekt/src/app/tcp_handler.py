@@ -92,7 +92,7 @@ class Reciever(ExceptThread):
                                 globals.folder_state[file_name].modification_timestamp
                                 < file.modification_timestamp
                             ):
-                                if str(file.status) == "1":  # why? idk but status didn't work
+                                if str(file.status) == "1":
                                     if os.path.exists(file_path):
                                         os.remove(file_path)
                                         logger.info(f'Deleted file: {file_name}')
@@ -109,7 +109,7 @@ class Reciever(ExceptThread):
                     file_path = message.file_name
                     
                     logger.info(f'Sending file {file_name}')
-                    with globals.folder_state_lock:  # TODO perhaps not needed
+                    with globals.folder_state_lock:
                         self.conn.transmit_queue.put(
                             data_parser.FileTransmission(
                                 file_path,

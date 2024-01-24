@@ -129,7 +129,6 @@ class FileTransmission:
         self.content = content
 
     def serialize(self):
-        # TODO encryption
         encryptet_content = encrypt(self.content)
 
         return (
