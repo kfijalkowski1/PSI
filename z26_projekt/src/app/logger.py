@@ -13,15 +13,23 @@ logging_path = os.path.join("logs", f"{timestamp_str}.log")
 logging.basicConfig(filename=logging_path, format='%(asctime)s %(levelname)-8s %(message)s',
                     encoding='utf-8', level=logging.DEBUG, datefmt="%Y-%m-%d %H:%M:%S")
 
-if not globals.gui:
-    # pipe with logs to console
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
 
-    console_formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
-    console_handler.setFormatter(console_formatter)
+def set_logger():
+    if not globals.gui:
+        # pipe with logs to console
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
 
-    logging.getLogger().addHandler(console_handler)
+        console_formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+        console_handler.setFormatter(console_formatter)
+
+        logging.getLogger().addHandler(console_handler)
+        logging.error("no gui")
+    # else:
+    #     for handler in logging.getLogger().handlers:
+    #         if isinstance(handler, logging.StreamHandler):
+    #             logging.getLogger().removeHandler(handler)
+    #     logging.error("gui")
 
 
 def debug(msg):

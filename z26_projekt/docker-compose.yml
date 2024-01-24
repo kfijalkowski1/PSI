@@ -31,8 +31,22 @@ services:
         aliases:
           - z26_project
     hostname: z26_project
-#    deploy:
-#      replicas: 2
+
+  z26_server_2:
+    build:
+      context: ./src
+      dockerfile: dockerfile-server
+    volumes:
+      - ./client3:/code/files_folder
+    image: z26_server
+    cap_add:
+      - NET_ADMIN
+    networks:
+      z26_network:
+        aliases:
+          - z26_project
+    hostname: z26_project
+
 
 
 networks:

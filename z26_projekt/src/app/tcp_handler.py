@@ -92,7 +92,7 @@ class Reciever(ExceptThread):
                                 globals.folder_state[file_name].modification_timestamp
                                 < file.modification_timestamp
                             ):
-                                if file.status == data_parser.FileStatus.DELETED:
+                                if str(file.status) == "1":  # why? idk but status didn't work
                                     if os.path.exists(file_path):
                                         os.remove(file_path)
                                         logger.info(f'Deleted file: {file_name}')
@@ -107,10 +107,6 @@ class Reciever(ExceptThread):
                     
                     file_name = message.file_name.split('/')[-1]
                     file_path = message.file_name
-                    
-                    if globals.folder_state[file_name].status == data_parser.FileStatus.DELETED:
-                        # TODO dopisać logikę żeby kolega obok wiedział że plik jest deleted
-                        pass
                     
                     logger.info(f'Sending file {file_name}')
                     with globals.folder_state_lock:  # TODO perhaps not needed
@@ -128,10 +124,10 @@ class Reciever(ExceptThread):
                     file_name = message.file_name.split('/')[-1]
                     file_path = message.file_name
                     with globals.folder_state_lock:
-                        logger.info(f'Writing file {file_name} with data: {message.encrypted_content}')
+                        logger.info(f'Writing file {file_name} with data: {message.content}')
                         
                         with open(file_path, 'wb') as fh:
-                            fh.write(message.encrypted_content)
+                            fh.write(message.content)
                             
                         os.utime(file_path, times=(message.time_of_modification/1000, message.time_of_modification/1000))
 
