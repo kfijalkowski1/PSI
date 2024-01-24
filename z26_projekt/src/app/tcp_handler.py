@@ -93,7 +93,7 @@ class Reciever(ExceptThread):
                                 globals.folder_state[file.name].modification_timestamp
                                 < file.modification_timestamp
                             ):
-                                if str(file.status) == "1":
+                                if file.status == data_parser.FileStatus.DELETED:
                                     if os.path.exists(file_path):
                                         os.remove(file_path)
                                         logger.info(f'Deleted file: {file.name}')
